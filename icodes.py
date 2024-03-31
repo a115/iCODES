@@ -24,17 +24,22 @@ def analyse_commit(commit):
         logger.info(f"Change path: {change.a_path}")
         # logger.info(f"New blob: \n{change.a_blob.data_stream.read().decode('utf-8')}")
         # logger.info(f"Old blob: \n{change.b_blob.data_stream.read().decode('utf-8')}")
-        logger.info("Diff:")
-        for line in unified_diff(
-            change.b_blob.data_stream.read().decode("utf-8").splitlines(),
-            change.a_blob.data_stream.read().decode("utf-8").splitlines(),
-            lineterm="",
-        ):
-            logger.info(line)
+        if change.b_blob and change.a_blob:
+            logger.info("Diff:")
+            for line in unified_diff(
+                change.b_blob.data_stream.read().decode("utf-8").splitlines(),
+                change.a_blob.data_stream.read().decode("utf-8").splitlines(),
+                lineterm="",
+            ):
+                logger.info(line)
 
 
 @app.command()
 def inspect_repo(repo_path: Path, branch_name: str = ""):
+    """
+    Inspect a git repository at a given path and branch. If no branch is provided, the current branch is used.
+    Logs changes from the latest commit on the branch.
+    """
     repo = Repo(repo_path)
     if not branch_name:
         # Get the default branch configured for the repo
@@ -45,6 +50,14 @@ def inspect_repo(repo_path: Path, branch_name: str = ""):
     # Get the commit at the head of the branch
     commit = branch.commit
     analyse_commit(commit)
+
+
+@app.command()
+def build_index(repo_path: Path):
+    """
+    Build an index of the repository at the given path. NOT YET IMPLEMENTED.
+    """
+    raise NotImplementedError("Not implemented yet")
 
 
 if __name__ == "__main__":

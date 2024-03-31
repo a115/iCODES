@@ -12,13 +12,26 @@ iCODES is an innovative tool that leverages LLM techniques to analyse and index 
 
 ## Installation
 
-iCODES requires Python 3.11 or higher. It is recommended to use Poetry for dependency management.
+iCODES requires Python 3.11 or higher. It is recommended to use Poetry for dependency management. 
+
+To install the dependencies, run: 
+
+    poetry install
+
 
 ## Usage
 
-To analyze a Git repository with iCODES, run the following command:
+To inspect a repository with iCODES, run:
 
-    poetry run icodes analyze /path/to/repo
+    poetry run python icodes.py inspect-repo /path/to/repo [--branch-name BRANCH_NAME]
+
+Replace /path/to/repo with the path to the Git repository you want to analyze. You can optionally specify a branch name using the --branch-name flag. If no branch is provided, iCODES will use the current branch for the repository.
+
+iCODES will analyze the latest commit on the specified branch and log the changes.
+
+To build an index for a Git repository with iCODES, run the following command:
+
+    poetry run python icodes.py build-index <path-to-repo>
 
 This will generate an indexed database of commit insights. You can then start the iCODES search server:
 

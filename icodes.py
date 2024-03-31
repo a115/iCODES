@@ -22,12 +22,12 @@ def analyse_commit(commit):
     for change in diff:
         logger.info(f"Change type: {change.change_type}")
         logger.info(f"Change path: {change.a_path}")
-        # logger.info(f"Old blob: \n{change.a_blob.data_stream.read().decode('utf-8')}")
-        # logger.info(f"New blob: \n{change.b_blob.data_stream.read().decode('utf-8')}")
+        # logger.info(f"New blob: \n{change.a_blob.data_stream.read().decode('utf-8')}")
+        # logger.info(f"Old blob: \n{change.b_blob.data_stream.read().decode('utf-8')}")
         logger.info("Diff:")
         for line in unified_diff(
-            change.a_blob.data_stream.read().decode("utf-8").splitlines(),
             change.b_blob.data_stream.read().decode("utf-8").splitlines(),
+            change.a_blob.data_stream.read().decode("utf-8").splitlines(),
             lineterm="",
         ):
             logger.info(line)

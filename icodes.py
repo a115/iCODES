@@ -1,37 +1,94 @@
-from typer import Typer
+from typer import Typer, echo
 from pathlib import Path
 from difflib import unified_diff
 
 from loguru import logger
 from git import Repo
 
+from settings import settings
+
 
 app = Typer()
 
 
-def analyse_commit(commit):
-    logger.debug(f"Analyzing commit hash: {commit}")
-    logger.info(f"Commit summary: {commit.summary}")  # First line of the commit message
+def extract_commit_info(commit) -> str:
+    output = "Commit hash: {commit}\n"
+    output += "Commit date: {commit.authored_datetime}\n"
+    output += "Author: {commit.author}\n"
+    output += "Summary: {commit.summary}\n"
     if str(commit.message).strip() != str(commit.summary).strip():
-        logger.info(f"Commit message: {commit.message}")
-    logger.info(f"Commit author: {commit.author}")
-    logger.info(f"Commit date: {commit.authored_datetime}")
+        output += "Message: {commit.message}\n"
+
+    output += "Changes:\n\n"
 
     # Get the diff of the commit with its parent
     diff = commit.diff(commit.parents[0])
     for change in diff:
-        logger.info(f"Change type: {change.change_type}")
-        logger.info(f"Change path: {change.a_path}")
+        output += f"{change.change_type} {change.a_path}\n"
+        if change.a_path.endswith(
+            "poetry.lock"
+        ):  # TODO: Extract this into a more robust sanitisation function
+            continue
         # logger.info(f"New blob: \n{change.a_blob.data_stream.read().decode('utf-8')}")
         # logger.info(f"Old blob: \n{change.b_blob.data_stream.read().decode('utf-8')}")
         if change.b_blob and change.a_blob:
-            logger.info("Diff:")
             for line in unified_diff(
                 change.b_blob.data_stream.read().decode("utf-8").splitlines(),
                 change.a_blob.data_stream.read().decode("utf-8").splitlines(),
                 lineterm="",
             ):
-                logger.info(line)
+                output += line + "\n"
+        output += "\n"
+
+    return output
+
+
+def analyse_commit(commit_info: str) -> tuple[str, str]:
+    from openai import OpenAI
+
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    model = "gpt-3.5-turbo"
+
+    system_prompt = """
+    You are an experienced software engineer reviewing a commit on a git repository. Please carefully analyse the 
+    commit and provide a summary of the key changes. Try your best to also infer the intent behind the changes, given 
+    the available context. 
+    """  # TODO: Chuck the project's README in here for context?
+
+    prompt = (
+        "Please summarise the key changes in this commit and infer the intent behind the changes: "
+        + commit_info
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
+    ]
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+    )
+
+    analysis = response.choices[0].message.content
+
+    # Call the LLM one more time to summarise the analysis into a single line that can be used as an improved commit message
+    summarise_prompt = "Please summarise this analysis into a single line that can be used as an improved commit message. "
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "assistant", "content": analysis},
+        {"role": "user", "content": summarise_prompt},
+    ]
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+    )
+
+    summary = response.choices[0].message.content
+
+    return analysis, summary
 
 
 @app.command()
@@ -49,7 +106,10 @@ def inspect_repo(repo_path: Path, branch_name: str = ""):
 
     # Get the commit at the head of the branch
     commit = branch.commit
-    analyse_commit(commit)
+    commit_info = extract_commit_info(commit)
+    analysis, summary = analyse_commit(commit_info)
+    echo(analysis + "\n")
+    echo("Summary: " + summary)
 
 
 @app.command()

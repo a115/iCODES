@@ -92,24 +92,31 @@ def analyse_commit(commit_info: str) -> tuple[str, str]:
 
 
 @app.command()
-def inspect_repo(repo_path: Path, branch_name: str = ""):
+def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
     """
     Inspect a git repository at a given path and branch. If no branch is provided, the current branch is used.
-    Logs changes from the latest commit on the branch.
+    Logs changes from the latest n_commits on the branch.
     """
     repo = Repo(repo_path)
     if not branch_name:
         # Get the default branch configured for the repo
         branch_name = repo.active_branch.name
     logger.debug(f"Inspecting repo: {repo_path} on branch: {branch_name}")
-    branch = repo.heads[branch_name]
 
-    # Get the commit at the head of the branch
-    commit = branch.commit
-    commit_info = extract_commit_info(commit)
-    analysis, summary = analyse_commit(commit_info)
-    echo(analysis + "\n")
-    echo("Summary: " + summary)
+    commits_history = repo.iter_commits(branch_name)
+    hashes = []
+    try:
+        for _ in range(n_commits):
+            hashes.append(next(commits_history))
+    except StopIteration:
+        ...
+    finally:
+        for commit in hashes:
+            commit_info = extract_commit_info(commit)
+            analysis, summary = analyse_commit(commit_info)
+            echo(analysis + "\n")
+            echo("Summary: " + summary)
+
 
 
 @app.command()

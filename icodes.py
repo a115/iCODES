@@ -95,7 +95,8 @@ def analyse_commit(commit_info: str) -> tuple[str, str]:
 def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
     """
     Inspect a git repository at a given path and branch. If no branch is provided, the current branch is used.
-    Logs changes from the latest n_commits on the branch.
+    Logs changes from the latest n_commits on the branch. If n_commits is not provided, a default maximum of 10
+    commits are inspected.
     """
     repo = Repo(repo_path)
     if not branch_name:
@@ -109,16 +110,14 @@ def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
         for _ in range(n_commits):
             hashes.append(next(commits_history))
     except StopIteration:
-        ...
+        pass
     finally:
         while hashes:
-            print(hashes.pop())
-    #     while hashes:
-    #         commit = hashes.pop()
-    #         commit_info = extract_commit_info(commit)
-    #         analysis, summary = analyse_commit(commit_info)
-    #         echo(analysis + "\n")
-    #         echo("Summary: " + summary)
+            commit = hashes.pop()
+            commit_info = extract_commit_info(commit)
+            analysis, summary = analyse_commit(commit_info)
+            echo(analysis + "\n")
+            echo("Summary: " + summary)
 
 
 

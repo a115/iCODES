@@ -2,7 +2,7 @@
 name = "icodes"
 version = "0.1.0"
 description = "Intelligent Commit Ontology Distiller and Enhanced Search"
-authors = ["Jordan Dimov <jdimov@a115.co.uk>"]
+authors = ["Jordan Dimov <jdimov@a115.co.uk>", "Bayo Ade <bayo.300@gmail.com>"]
 license = "CC0-1.0"
 readme = "README.md"
 

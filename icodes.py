@@ -104,21 +104,11 @@ def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
         branch_name = repo.active_branch.name
     logger.debug(f"Inspecting repo: {repo_path} on branch: {branch_name}")
 
-    commits_history = repo.iter_commits(branch_name)
-    hashes = []
-    try:
-        for _ in range(n_commits):
-            hashes.append(next(commits_history))
-    except StopIteration:
-        pass
-    finally:
-        while hashes:
-            commit = hashes.pop()
-            commit_info = extract_commit_info(commit)
-            analysis, summary = analyse_commit(commit_info)
-            echo(analysis + "\n")
-            echo("Summary: " + summary)
-
+    for commit in repo.iter_commits(branch_name, max_count=n_commits, reverse=True):
+        commit_info = extract_commit_info(commit)
+        analysis, summary = analyse_commit(commit_info)
+        echo(analysis + "\n")
+        echo("Summary: " + summary)
 
 
 @app.command()

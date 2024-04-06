@@ -158,3 +158,5 @@ cython_debug/
 
 poetry.lock
 .envrc
+
+icodes.db

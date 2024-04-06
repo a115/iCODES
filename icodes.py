@@ -5,8 +5,7 @@ from difflib import unified_diff
 from loguru import logger
 from git import Repo
 
-from settings import settings
-
+from llm_interface import analyse_commit
 
 app = Typer()
 
@@ -43,56 +42,10 @@ def extract_commit_info(commit) -> str:
     return output
 
 
-def analyse_commit(commit_info: str) -> tuple[str, str]:
-    from openai import OpenAI
-
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
-    model = "gpt-3.5-turbo"
-
-    system_prompt = """
-    You are an experienced software engineer reviewing a commit on a git repository. Please carefully analyse the 
-    commit and provide a summary of the key changes. Try your best to also infer the intent behind the changes, given 
-    the available context. 
-    """  # TODO: Chuck the project's README in here for context?
-
-    prompt = (
-        "Please summarise the key changes in this commit and infer the intent behind the changes: "
-        + commit_info
-    )
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompt},
-    ]
-
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-    )
-
-    analysis = response.choices[0].message.content
-
-    # Call the LLM one more time to summarise the analysis into a single line that can be used as an improved commit message
-    summarise_prompt = "Please summarise this analysis into a single line that can be used as an improved commit message. "
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": analysis},
-        {"role": "user", "content": summarise_prompt},
-    ]
-
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-    )
-
-    summary = response.choices[0].message.content
-
-    return analysis, summary
-
-
 @app.command()
-def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
+def inspect_repo(
+    repo_path: Path, branch_name: str = "", n_commits: int = 10, detailed: bool = False
+):
     """
     Inspect a git repository at a given path and branch. If no branch is provided, the current branch is used.
     Logs changes from the latest n_commits on the branch. If n_commits is not provided, a default maximum of 10
@@ -107,8 +60,12 @@ def inspect_repo(repo_path: Path, branch_name: str = "", n_commits: int = 10):
     for commit in repo.iter_commits(branch_name, max_count=n_commits, reverse=True):
         commit_info = extract_commit_info(commit)
         analysis, summary = analyse_commit(commit_info)
-        echo(analysis + "\n")
-        echo("Summary: " + summary)
+        if detailed:
+            echo(analysis + "\n")
+        echo(
+            f"Summary of commit #{commit} by {commit.author} from {commit.authored_datetime}: \n"
+        )
+        echo("\t" + summary + "\n")
 
 
 @app.command()

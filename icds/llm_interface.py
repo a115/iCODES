@@ -1,6 +1,6 @@
 from tenacity import retry, stop_after_attempt, retry_if_exception_type
 
-from settings import settings
+from icds.settings import settings
 from openai import OpenAI, APIConnectionError
 import tiktoken
 

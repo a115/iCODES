@@ -1,10 +1,19 @@
 [tool.poetry]
 name = "icodes"
 version = "0.1.0"
-description = "Intelligent Commit Ontology Distiller and Enhanced Search"
+description = "LLM-powered Git archeology tool (a.k.a. Intelligent Commit Ontology Distiller and Enhanced Search)"
 authors = ["Jordan Dimov <jdimov@a115.co.uk>", "Bayo Ade <bayo.300@gmail.com>"]
 license = "CC0-1.0"
 readme = "README.md"
+repository = "https://github.com/a115/iCODES"
+homepage = "https://github.com/a115/iCODES"
+documentation = "https://github.com/a115/iCODES"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+keywords = ["git", "llm", "archeology", "commit", "search"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -21,6 +30,9 @@ sqlmodel = "^0.0.16"
 ipdb = "^0.13.13"
 ruff = "^0.3.5"
 pytest = "^8.1.1"
+
+[tool.poetry.scripts]
+icodes = "icodes:main"
 
 [build-system]
 requires = ["poetry-core"]

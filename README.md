@@ -1,4 +1,5 @@
-# Intelligent Commit Ontology Distiller and Enhanced Search (iCODES)
+# iCODES: LLM-powered Git archeology
+## a.k.a. Intelligent Commit Ontology Distiller and Enhanced Search
 
 iCODES is an innovative tool that leverages LLM techniques to analyse and index Git commit histories in context. By intelligently summarizing commit intents and enabling powerful semantic search, iCODES empowers developers to understand and navigate codebases more efficiently. 
 
@@ -13,12 +14,21 @@ iCODES is an innovative tool that leverages LLM techniques to analyse and index 
 
 ## Installation
 
-iCODES requires Python 3.11 or higher. It is recommended to use Poetry for dependency management. 
+iCODES requires Python 3.11 or higher. 
 
-To install the dependencies, run: 
+    pip install icodes
+
+### Alternative installation 
+
+Or clone the repo:
+
+    git clone https://github.com/a115/iCODES.git
+
+It is recommended to use Poetry for dependency management. To install the dependencies, run: 
 
     poetry install
 
+If this method is used, prefix all commands with `poetry run python icodes.py` (instead of `icodes`) to run the iCODES commands.
 
 ## Usage
 
@@ -26,7 +36,7 @@ To install the dependencies, run:
 
 To inspect a repository with iCODES, run:
 
-    poetry run python icodes.py inspect-repo /path/to/repo [--branch-name BRANCH_NAME]
+    icodes inspect-repo /path/to/repo [--branch-name BRANCH_NAME]
 
 Replace /path/to/repo with the path to the Git repository you want to analyze. You can optionally specify a branch name using the --branch-name flag. If no branch is provided, iCODES will use the current branch for the repository.
 
@@ -37,7 +47,7 @@ iCODES will analyze the latest commit on the specified branch and log the change
 
 To build an index for a Git repository with iCODES, run the following command:
 
-    poetry run python icodes.py build-index <path-to-repo>
+    icodes build-index <path-to-repo>
 
 This will generate an indexed database of commit insights. 
 
@@ -45,7 +55,7 @@ This will generate an indexed database of commit insights.
 
 iCODES provides a powerful search interface to find relevant commits based on various criteria. To search the indexed commit data, use the following command:
 
-    poetry run python icodes.py search <query> [--author AUTHOR] [--file FILE] [--start-date START_DATE] [--end-date END_DATE]
+    icodes search <query> [--author AUTHOR] [--file FILE] [--start-date START_DATE] [--end-date END_DATE]
 
 - `<query>`: The search query string to match against commit messages and details.
 - `--author AUTHOR`: Filter commits by the specified author.
@@ -55,7 +65,7 @@ iCODES provides a powerful search interface to find relevant commits based on va
 
 Example usage:
 
-    poetry run python icodes.py search "bug fix" --author "John Doe" --file "src/main.py" --start-date "2023-01-01" --end-date "2023-12-31"
+    icodes search "bug fix" --author "John Doe" --file "src/main.py" --start-date "2023-01-01" --end-date "2023-12-31"
 
 This command will search for commits containing the phrase "bug fix" authored by "John Doe", modifying the file "src/main.py", between the dates "2023-01-01" and "2023-12-31".
 

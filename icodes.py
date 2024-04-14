@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 from git import Repo
 
-from icds.git_helpers import extract_commit_info
+from icds.git_helpers import extract_commit_info, get_staged_changes
 from icds.llm_interface import analyse_commit
 from icds.models import (
     create_db_and_tables,
@@ -121,6 +121,21 @@ def search(
             echo(f"Summary: {commit.summary}")
             echo(f"Details: {commit.details}")
             echo("\n")
+
+
+@app.command()
+def suggest_commit_message(
+    repo_path: Path = Argument(..., help="Path to the git repository"),
+):
+    """
+    Analyse the currently staged changes and suggest a commit message.
+    """
+
+    repo = Repo(repo_path)
+    staged_changes = get_staged_changes(repo)
+    echo(staged_changes)
+    # commit_message = suggest_commit_message(staged_changes)
+    # echo(commit_message)
 
 
 def main():

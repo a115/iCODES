@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, create_engine, Session, select
+from sqlmodel import Field, SQLModel, create_engine, Session
 from datetime import datetime
 
 from icds.settings import settings
@@ -34,10 +34,3 @@ def create_db_and_tables():
 def get_db():
     with Session(engine) as session:
         yield session
-
-
-def get_repo_by_name(name: str):
-    with Session(engine) as session:
-        statement = select(DbRepo).where(DbRepo.name == name)
-        repo = session.exec(statement).first()
-        return repo

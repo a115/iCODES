@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 from git import Repo
 
-from icds.git_helpers import extract_commit_info
+from icds.git_helpers import extract_commit_info, get_staged_changes
 from icds.llm_interface import analyse_commit
 from icds.models import (
     create_db_and_tables,
@@ -25,7 +25,12 @@ app = Typer()
 
 @app.command()
 def inspect_repo(
-    repo_path: Path, branch_name: str = "", n_commits: int = 10, detailed: bool = False
+    repo_path: Path = Argument(..., help="Path to the git repository"),
+    branch_name: str = Option(
+        "", help="Branch name to inspect (default: current branch)"
+    ),
+    n_commits: int = Option(10, help="Number of commits to inspect (default: 10)"),
+    detailed: bool = Option(False, help="Show detailed analysis (default: False)"),
 ):
     """
     Inspect a git repository at a given path and branch. If no branch is provided, the current branch is used.
@@ -50,7 +55,13 @@ def inspect_repo(
 
 
 @app.command()
-def build_index(repo_path: Path, branch_name: str = "", n_commits: int = 10):
+def build_index(
+    repo_path: Path = Argument(..., help="Path to the git repository"),
+    branch_name: str = Option(
+        "", help="Branch name to index (default: current branch)"
+    ),
+    n_commits: int = Option(10, help="Number of commits to index (default: 10)"),
+):
     """
     Build an index of the repository at the given path. If no branch is provided, the current branch is used.
     """
@@ -121,6 +132,23 @@ def search(
             echo(f"Summary: {commit.summary}")
             echo(f"Details: {commit.details}")
             echo("\n")
+
+
+@app.command()
+def suggest_commit_message(
+    repo_path: Path = Argument(..., help="Path to the git repository"),
+    detailed: bool = Option(False, help="Show detailed analysis (default: False)"),
+):
+    """
+    Analyse the currently staged changes and suggest a commit message.
+    """
+
+    repo = Repo(repo_path)
+    commit_info = get_staged_changes(repo)
+    analysis, summary = analyse_commit(commit_info)
+    if detailed:
+        echo(analysis + "\n\n")
+    echo(f"git commit -m '{summary}'")
 
 
 def main():

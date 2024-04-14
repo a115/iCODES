@@ -40,9 +40,9 @@ To inspect a repository with iCODES, run:
 
     icodes inspect-repo /path/to/repo [--branch-name BRANCH_NAME]
 
-Replace /path/to/repo with the path to the Git repository you want to analyze. You can optionally specify a branch name using the --branch-name flag. If no branch is provided, iCODES will use the current branch for the repository.
+Replace /path/to/repo with the path to the Git repository you want to analyse. You can optionally specify a branch name using the --branch-name flag. If no branch is provided, iCODES will use the current branch for the repository.
 
-iCODES will analyze the latest commit on the specified branch and log the changes.
+iCODES will analyse the latest commit on the specified branch and log the changes.
 
 
 ### Building an Index
@@ -67,9 +67,19 @@ iCODES provides a powerful search interface to find relevant commits based on va
 
 Example usage:
 
-    icodes search "bug fix" --author "John Doe" --file "src/main.py" --start-date "2023-01-01" --end-date "2023-12-31"
+    icodes search "bug fix" --author "Jane Doe" --file "src/main.py" --start-date "2023-01-01" --end-date "2023-12-31"
 
 This command will search for commits containing the phrase "bug fix" authored by "John Doe", modifying the file "src/main.py", between the dates "2023-01-01" and "2023-12-31".
+
+### Suggesting a commit for the currently staged changes
+
+You can now use the `suggest-commit-message` command to analyse the currently staged changes and suggest a commit message:
+
+    icodes suggest_commit_message /path/to/repo
+
+This command will retrieve the staged changes, format them into a commit-like format, and then use the LLM to analyse the changes and suggest a commit message.
+
+The suggested commit message and the detailed analysis will be displayed in the console output.
 
 
 ## Contributing

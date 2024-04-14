@@ -5,10 +5,11 @@ iCODES is an innovative tool that leverages LLM techniques to analyse and index 
 ## Features
 
 * Intelligent commit analysis powered by large language models
-* Semantic search to find relevant commits and code changes
+* Semantic search (coming soon) to find relevant commits and code changes
+* Flexible search options to filter by author, file path, and date range
 * Commit timeline visualisation
 * Insight extraction to identify trends and patterns in code evolution
-* CLI and web-based UI
+* CLI and web-based UI (comming soon)
 
 ## Installation
 
@@ -21,6 +22,8 @@ To install the dependencies, run:
 
 ## Usage
 
+### Inspecting a Repository
+
 To inspect a repository with iCODES, run:
 
     poetry run python icodes.py inspect-repo /path/to/repo [--branch-name BRANCH_NAME]
@@ -29,15 +32,32 @@ Replace /path/to/repo with the path to the Git repository you want to analyze. Y
 
 iCODES will analyze the latest commit on the specified branch and log the changes.
 
+
+### Building an Index
+
 To build an index for a Git repository with iCODES, run the following command:
 
     poetry run python icodes.py build-index <path-to-repo>
 
-This will generate an indexed database of commit insights. You can then start the iCODES search server:
+This will generate an indexed database of commit insights. 
 
-    poetry run icodes serve
+### Searching Commits
 
-Open your web browser and navigate to `http://localhost:8000` to access the iCODES search interface.
+iCODES provides a powerful search interface to find relevant commits based on various criteria. To search the indexed commit data, use the following command:
+
+    poetry run python icodes.py search <query> [--author AUTHOR] [--file FILE] [--start-date START_DATE] [--end-date END_DATE]
+
+- `<query>`: The search query string to match against commit messages and details.
+- `--author AUTHOR`: Filter commits by the specified author.
+- `--file FILE`: Filter commits that modified the specified file path.
+- `--start-date START_DATE`: Filter commits after the specified date (YYYY-MM-DD).
+- `--end-date END_DATE`: Filter commits before the specified date (YYYY-MM-DD).
+
+Example usage:
+
+    poetry run python icodes.py search "bug fix" --author "John Doe" --file "src/main.py" --start-date "2023-01-01" --end-date "2023-12-31"
+
+This command will search for commits containing the phrase "bug fix" authored by "John Doe", modifying the file "src/main.py", between the dates "2023-01-01" and "2023-12-31".
 
 
 ## Contributing

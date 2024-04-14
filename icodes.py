@@ -1,54 +1,21 @@
-from typer import Typer, echo
+from typer import Typer, echo, Argument, Option
 from pathlib import Path
-from difflib import unified_diff
 
 from loguru import logger
 from git import Repo
 
+from icds.git_helpers import extract_commit_info
 from icds.llm_interface import analyse_commit
 from icds.models import (
     create_db_and_tables,
     engine,
-    DbRepo,
     RepoCommit,
     Session,
-    get_repo_by_name,
 )
+from icds.data import get_or_create_db_repo, get_repo_name_by_id, search_commits
 from icds.settings import settings
 
 app = Typer()
-
-
-def extract_commit_info(commit) -> str:
-    output = "RepoCommit hash: {commit}\n"
-    output += "RepoCommit date: {commit.authored_datetime}\n"
-    output += "Author: {commit.author}\n"
-    output += "Summary: {commit.summary}\n"
-    if str(commit.message).strip() != str(commit.summary).strip():
-        output += "Message: {commit.message}\n"
-
-    output += "Changes:\n\n"
-
-    # Get the diff of the commit with its parent
-    diff = commit.diff(commit.parents[0])
-    for change in diff:
-        output += f"{change.change_type} {change.a_path}\n"
-        if change.a_path.endswith(
-            "poetry.lock"
-        ):  # TODO: Extract this into a more robust sanitisation function
-            continue
-        # logger.info(f"New blob: \n{change.a_blob.data_stream.read().decode('utf-8')}")
-        # logger.info(f"Old blob: \n{change.b_blob.data_stream.read().decode('utf-8')}")
-        if change.b_blob and change.a_blob:
-            for line in unified_diff(
-                change.b_blob.data_stream.read().decode("utf-8").splitlines(),
-                change.a_blob.data_stream.read().decode("utf-8").splitlines(),
-                lineterm="",
-            ):
-                output += line + "\n"
-        output += "\n"
-
-    return output
 
 
 @app.command()
@@ -92,7 +59,7 @@ def build_index(repo_path: Path, branch_name: str = "", n_commits: int = 10):
     )
 
     with Session(engine) as db:
-        db_repo = _get_or_create_repo(db, repo, repo_path)
+        db_repo = get_or_create_db_repo(db, repo, repo_path)
         for commit in repo.iter_commits(branch_name, max_count=n_commits, reverse=True):
             commit_info = extract_commit_info(commit)
             echo(
@@ -120,20 +87,32 @@ def build_index(repo_path: Path, branch_name: str = "", n_commits: int = 10):
             echo("\t" + summary + "\n")
 
 
-def _get_or_create_repo(db, repo, repo_path):
-    remote_url = repo.remotes.origin.url
-    repo_name = remote_url.split("/")[-1].split(".")[0]
-    db_repo = get_repo_by_name(repo_name)
-    if not db_repo:
-        logger.info(f"Creating a new repository record for repo '{repo_name}'")
-        db_repo = DbRepo(
-            name=repo_name,
-            path=str(repo_path),
-            remote_url=remote_url,
+@app.command()
+def search(
+    query: str = Argument(..., help="Search query string"),
+    repo_name: str = Option("", help="Filter by repository name"),
+    author: str = Option("", help="Filter by commit author"),
+    file: str = Option("", help="Filter by file path"),
+    start_date: str = Option("", help="Filter commits after this date (YYYY-MM-DD)"),
+    end_date: str = Option("", help="Filter commits before this date (YYYY-MM-DD)"),
+):
+    """
+    Search the indexed commits for the given query string. Optionally filter by repository name, commit author, file
+    path, and date range.
+    """
+    with Session(engine) as db:
+        commits = search_commits(
+            db, query, repo_name, file, author, start_date, end_date
         )
-        db.add(db_repo)
-        db.commit()
-    return db_repo
+        for commit in commits:
+            repo_name = get_repo_name_by_id(db, commit.repo_id)
+            echo(f"Repository: {repo_name}")
+            echo(f"Commit: {commit.hash}")
+            echo(f"Author: {commit.author}")
+            echo(f"Date: {commit.datetime}")
+            echo(f"Summary: {commit.summary}")
+            echo(f"Details: {commit.details}")
+            echo("\n")
 
 
 if __name__ == "__main__":

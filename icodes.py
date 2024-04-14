@@ -123,6 +123,10 @@ def search(
             echo("\n")
 
 
-if __name__ == "__main__":
+def main():
     create_db_and_tables()
     app()
+
+
+if __name__ == "__main__":
+    main()

@@ -18,6 +18,8 @@ iCODES requires Python 3.11 or higher.
 
     pip install icodes
 
+Since the only supported LLM backend right now is OpenAI, you will need to export your OpenAI API key to the environment variable `OPENAI_API_KEY`. You can also set the `DEFAULT_MODEL` environment variable to the GPT model you wish to use (default value is "gpt-3.5-turbo" for a reasonable price / quality ratio.)
+
 ### Alternative installation 
 
 Or clone the repo:

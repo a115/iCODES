@@ -12,7 +12,12 @@ from icds.models import (
     RepoCommit,
     Session,
 )
-from icds.data import get_or_create_db_repo, get_repo_name_by_id, search_commits
+from icds.data import (
+    get_or_create_db_repo,
+    get_repo_name_by_id,
+    search_commits,
+    get_db_commit_by_hash,
+)
 from icds.settings import settings
 
 app = Typer()
@@ -61,6 +66,9 @@ def build_index(repo_path: Path, branch_name: str = "", n_commits: int = 10):
     with Session(engine) as db:
         db_repo = get_or_create_db_repo(db, repo, repo_path)
         for commit in repo.iter_commits(branch_name, max_count=n_commits, reverse=True):
+            if get_db_commit_by_hash(db, commit.hexsha):
+                echo(f"Commit {commit.hexsha} already indexed. Skipping ...")
+                continue
             commit_info = extract_commit_info(commit)
             echo(
                 f"Indexing commit {commit.hexsha} by {commit.author} from {commit.authored_datetime} ... \n"

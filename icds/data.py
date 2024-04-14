@@ -1,20 +1,19 @@
 from loguru import logger
-from sqlmodel import Session, select
+from sqlmodel import select
 
-from icds.models import engine, DbRepo, RepoCommit
-
-
-def get_repo_by_name(name: str):
-    with Session(engine) as session:
-        statement = select(DbRepo).where(DbRepo.name == name)
-        repo = session.exec(statement).first()
-        return repo
+from icds.models import DbRepo, RepoCommit
 
 
-def get_or_create_db_repo(db, repo, repo_path):
+def get_repo_by_name(db, name: str) -> DbRepo | None:
+    statement = select(DbRepo).where(DbRepo.name == name)
+    repo = db.exec(statement).first()
+    return repo
+
+
+def get_or_create_db_repo(db, repo, repo_path) -> DbRepo:
     remote_url = repo.remotes.origin.url
     repo_name = remote_url.split("/")[-1].split(".")[0]
-    db_repo = get_repo_by_name(repo_name)
+    db_repo = get_repo_by_name(db, repo_name)
     if not db_repo:
         logger.info(f"Creating a new repository record for repo '{repo_name}'")
         db_repo = DbRepo(
@@ -27,14 +26,16 @@ def get_or_create_db_repo(db, repo, repo_path):
     return db_repo
 
 
-def get_repo_name_by_id(db, repo_id):
+def get_repo_name_by_id(db, repo_id) -> str:
     return db.exec(select(DbRepo).where(DbRepo.id == repo_id)).first().name
 
 
-def search_commits(db, query, repo_name, file, author, start_date, end_date):
+def search_commits(
+    db, query, repo_name, file, author, start_date, end_date
+) -> list[RepoCommit]:
     statement = select(RepoCommit)
     if repo_name:
-        db_repo = get_repo_by_name(repo_name)
+        db_repo = get_repo_by_name(db, repo_name)
         if not db_repo:
             raise ValueError(f"Repository '{repo_name}' not found.")
         statement = statement.where(RepoCommit.repo_id == db_repo.id)
@@ -51,3 +52,7 @@ def search_commits(db, query, repo_name, file, author, start_date, end_date):
     )
     commits = db.exec(statement).all()
     return commits
+
+
+def get_db_commit_by_hash(db, commit_hash) -> RepoCommit | None:
+    return db.exec(select(RepoCommit).where(RepoCommit.hash == commit_hash)).first()

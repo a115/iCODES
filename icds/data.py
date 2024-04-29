@@ -10,6 +10,12 @@ def get_repo_by_name(db, name: str) -> DbRepo | None:
     return repo
 
 
+def list_repos(db) -> list[DbRepo] | None:
+    statement = select(DbRepo)
+    repos = db.exec(statement=statement).all()
+    return repos
+
+
 def get_or_create_db_repo(db, repo, repo_path) -> DbRepo:
     remote_url = repo.remotes.origin.url
     repo_name = remote_url.split("/")[-1].split(".")[0]
@@ -28,6 +34,14 @@ def get_or_create_db_repo(db, repo, repo_path) -> DbRepo:
 
 def get_repo_name_by_id(db, repo_id) -> str:
     return db.exec(select(DbRepo).where(DbRepo.id == repo_id)).first().name
+
+
+def list_commits(db, repo_id, limit=None) -> list[RepoCommit] | None:
+    statement = select(RepoCommit).where(RepoCommit.repo_id == repo_id)
+    if limit:
+        statement = statement.limit(limit)
+    commits = db.exec(statement).all()
+    return commits
 
 
 def search_commits(

@@ -10,9 +10,11 @@ def get_repo_by_name(db, name: str) -> DbRepo | None:
     return repo
 
 
-def list_repos(db) -> list[DbRepo] | None:
+def list_repos(db, limit=None) -> list[DbRepo] | None:
     statement = select(DbRepo)
-    repos = db.exec(statement=statement).all()
+    if limit:
+        statement = statement.limit(limit)
+    repos = db.exec(statement).all()
     return repos
 
 
